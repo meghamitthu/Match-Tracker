@@ -12,4 +12,3 @@ const Each_over = new Schema({
 })
 mongoose.model('Over', Each_over);
 module.exports = mongoose.model('Over');
-// module.exports= mongoose;
