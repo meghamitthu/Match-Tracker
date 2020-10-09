@@ -3,13 +3,16 @@ var router = express.Router();
 var bodyParser = require('body-parser');
 var overInput = require('../Models/overModel');
 var bowler = require('../Models/bowlermodel');
+const overModel = require('../Models/overModel');
+// var economy = require('../Models/overmodel');
 router.post('/overModel/update',async function(req,res){
     try{
     let again = await overInput.updateOne({
         "over_number":req.body.over_number},
-        {push:{"ball":req.body.ball,"ball_type":req.body.ball_type},
+        {$push:{des:
+            {"ball":req.body.ball,"ball_type":req.body.ball_type},
         }    
-    ); 
+        }); 
     res.send(again)
     }
     catch(error){
@@ -74,12 +77,24 @@ router.get("/overModel/economy",async function(req,res){
                     $match : {bowler: req.body.bowler},
                 },
                 {
-                    $group : { _id : "$over_number" },
-                    $count : "over_number" 
-                }
+                    $group : { _id : "$over_number"},
+                },
+                { $count : "over_number"},
             ]
         )
-        let economy = (runs)/(overCount)
+        // overCount = overCount[0].count;
+        let bowlerRuns = await overModel.aggregate(
+            [
+                {
+                    $match : {bowler: req.body.bowler},
+                },
+                {
+                    $group : {_id :"$over_number",sum: {$sum: "$total_runs"},}
+                },     
+            ]
+        )
+        bowlerRuns = bowlerRuns[0].sum;
+        let economy = (bowlerRuns)/(overCount)
         res.json(economy)
     }catch(error){
         console.log(error);
